@@ -39,4 +39,3 @@ next-env.d.ts
 /lib
 .env.local.example
 /src/app/api
-/src/app/fonts
