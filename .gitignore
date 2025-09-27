@@ -36,11 +36,4 @@ yarn-error.log*
 next-env.d.ts
 
 # extra
-/lib
 .env.local.example
-/src/app/api
-/src/app/chat
-/src/app/dashboard
-/src/app/fonts
-/src/app/pomodoro
-/src/app/profile
