@@ -36,7 +36,6 @@ yarn-error.log*
 next-env.d.ts
 
 # extra
-/components
 /lib
 .env.local.example
 /src/app/api
