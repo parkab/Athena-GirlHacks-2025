@@ -22,7 +22,7 @@ export default function RootLayout({
                   ΑΘΗΝΑ
                 </h1>
               </div>
-              <div className="flex space-x-8 items-center">
+              <div className="flex space-x-6 items-center">
                 <a href="/dashboard" className="text-primary-600 hover:text-primary-800 font-medium">
                   Dashboard
                 </a>
@@ -34,6 +34,12 @@ export default function RootLayout({
                 </a>
                 <a href="/pomodoro" className="text-primary-600 hover:text-primary-800 font-medium">
                   Pomodoro
+                </a>
+                <a href="/test-analysis" className="text-primary-600 hover:text-primary-800 font-medium">
+                  Analysis
+                </a>
+                <a href="/radar-demo" className="text-primary-600 hover:text-primary-800 font-medium">
+                  Charts
                 </a>
               </div>
             </div>
