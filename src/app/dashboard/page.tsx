@@ -3,6 +3,7 @@
 import DashboardCard from '@/components/DashboardCard';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Profile {
   purpose: string;
@@ -15,6 +16,7 @@ interface Profile {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [habits, setHabits] = useState([
@@ -30,10 +32,18 @@ export default function DashboardPage() {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch('/api/profile');
+      // include credentials so the token cookie is sent
+      const response = await fetch('/api/profile', { credentials: 'include' });
+      if (response.status === 401) {
+        // not authenticated — send user to login
+        router.push('/login');
+        return;
+      }
       if (response.ok) {
         const data = await response.json();
         setProfile(data.profile);
+      } else {
+        console.error('Failed to load profile:', await response.text());
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
