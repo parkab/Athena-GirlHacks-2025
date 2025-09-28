@@ -71,7 +71,7 @@ export default function LoginPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Username</label>
             <input
-              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg"
+              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg text-black"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -83,7 +83,7 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
               type="password"
-              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg"
+              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg text-black"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
