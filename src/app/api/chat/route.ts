@@ -6,9 +6,14 @@ import { NextRequest, NextResponse } from 'next/server';
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
+interface ChatRequestBody {
+  message: string;
+  personalityId?: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body: any = await request.json(); // <-- parse body directly
+    const body: ChatRequestBody = await request.json(); // <-- parse body directly
     const { message, personalityId } = body ?? {};
 
     if (!message) {
