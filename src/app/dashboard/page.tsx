@@ -4,6 +4,7 @@ import DashboardCard from '@/components/DashboardCard';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import AuthGuard from '@/components/AuthGuard';
 
 interface Profile {
   purpose: string;
@@ -33,7 +34,7 @@ export default function DashboardPage() {
   const fetchProfile = async () => {
     try {
       // include credentials so the token cookie is sent
-      const response = await fetch('/api/profile', { credentials: 'include' });
+      const response = await fetch('/api/profile', { headers: { authorization: 'Bearer ' + localStorage.getItem('token') } });
       if (response.status === 401) {
         // not authenticated — send user to login
         router.push('/login');
@@ -95,6 +96,7 @@ export default function DashboardPage() {
   }
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-temple py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -299,5 +301,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   );
 }
