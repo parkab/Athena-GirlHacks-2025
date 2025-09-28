@@ -11,15 +11,27 @@ interface Profile {
   vision: string;
   values: string[];
   selfAssessment: {
-    questions: string[];
+    questions: string[]; // User responses to the assessment questions
   };
   createdAt: string;
+}
+
+interface AssessmentCategories {
+  Habits: number;
+  Mindset: number;
+  Relationships: number;
+  Health: number;
+  Creativity: number;
+  Purpose: number;
+  Learning: number;
 }
 
 export default function DashboardPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [radarScores, setRadarScores] = useState<AssessmentCategories | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -35,6 +47,11 @@ export default function DashboardPage() {
       if (response.ok) {
         const data = await response.json();
         setProfile(data.profile);
+        
+        // After getting profile, analyze it with Gemini
+        if (data.profile) {
+          await analyzeProfile(data.profile);
+        }
       } else {
         console.error('Failed to load profile:', await response.text());
       }
@@ -42,6 +59,85 @@ export default function DashboardPage() {
       console.error('Error fetching profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const analyzeProfile = async (profileData: Profile) => {
+    try {
+      setAnalysisLoading(true);
+      console.log('Starting profile analysis with Gemini...');
+      
+      // Create assessment text from profile data
+      const textParts = [];
+      
+      if (profileData.purpose.trim()) {
+        textParts.push(`Purpose: ${profileData.purpose}`);
+      }
+      
+      if (profileData.vision.trim()) {
+        textParts.push(`Vision: ${profileData.vision}`);
+      }
+      
+      if (profileData.values.length > 0) {
+        const validValues = profileData.values.filter(v => v.trim());
+        if (validValues.length > 0) {
+          textParts.push(`Values: ${validValues.join(', ')}`);
+        }
+      }
+      
+      // Add user responses to assessment questions
+      if (profileData.selfAssessment.questions.length > 0) {
+        const validResponses = profileData.selfAssessment.questions.filter(q => q.trim());
+        if (validResponses.length > 0) {
+          textParts.push(`Assessment Responses: ${validResponses.join(' | ')}`);
+        }
+      }
+      
+      const assessmentText = textParts.join(' | ');
+      
+      const response = await fetch('/api/analyze-assessment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ assessmentText }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Analysis completed:', data.categories);
+        setRadarScores(data.categories);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to analyze profile:', errorData);
+        
+        // Fall back to sample data if analysis fails
+        setRadarScores({
+          Mindset: 0.7,
+          Health: 0.6,
+          Relationships: 0.5,
+          Purpose: 0.8,
+          Learning: 0.6,
+          Creativity: 0.5,
+          Habits: 0.6
+        });
+      }
+    } catch (error) {
+      console.error('Error analyzing profile:', error);
+      
+      // Fall back to sample data if analysis fails
+      setRadarScores({
+        Mindset: 0.7,
+        Health: 0.6,
+        Relationships: 0.5,
+        Purpose: 0.8,
+        Learning: 0.6,
+        Creativity: 0.5,
+        Habits: 0.6
+      });
+    } finally {
+      setAnalysisLoading(false);
     }
   };
 
@@ -77,16 +173,6 @@ export default function DashboardPage() {
       </AuthGuard>
     );
   }
-
-  // Sample radar chart data - scores should be between 0.0 and 1.0
-  const radarScores = {
-    Mindset: 0.8,
-    Health: 0.6,
-    Relationships: 0.7,
-    Purpose: 0.9,
-    Learning: 0.5,
-    Creativity: 0.6
-  };
 
   // Sample threads to weave data
   const threadsToWeave = [
@@ -172,7 +258,20 @@ export default function DashboardPage() {
                       Your personal growth visualization across key life areas
                     </p>
                     <div className="bg-white p-6 rounded border border-gold-200">
-                      <RadarChart scores={radarScores} />
+                      {analysisLoading ? (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-3"></div>
+                            <p className="text-gray-600 font-medium">Athena is analyzing your wisdom...</p>
+                          </div>
+                        </div>
+                      ) : radarScores ? (
+                        <RadarChart scores={radarScores as unknown as { [key: string]: number }} />
+                      ) : (
+                        <div className="flex items-center justify-center py-12">
+                          <p className="text-gray-500">Analysis data not available</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -187,7 +286,7 @@ export default function DashboardPage() {
                     <div className="bg-white p-4 rounded border border-green-200">
                       <div className="space-y-3">
                         {threadsToWeave.map((thread, index) => (
-                          <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <div key={index} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                             <div className="w-2 h-2 bg-primary-600 rounded-full flex-shrink-0"></div>
                             <p className="text-gray-700 font-medium">{thread}</p>
                           </div>
