@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import User from '@/lib/user';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 function getTokenFromReq(req: NextRequest) {
   const auth = req.headers.get('authorization') || '';
   if (auth.startsWith('Bearer ')) return auth.slice(7);

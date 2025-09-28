@@ -3,6 +3,9 @@ import UserProfile from '@/lib/models';
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 function getTokenFromReq(req: NextRequest) {
   const auth = req.headers.get('authorization') || '';
   if (auth.startsWith('Bearer ')) return auth.slice(7);
