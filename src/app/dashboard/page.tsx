@@ -32,6 +32,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [radarScores, setRadarScores] = useState<AssessmentCategories | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [threadsToWeave, setThreadsToWeave] = useState<string[]>([]);
+  const [threadsLoading, setThreadsLoading] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -50,7 +52,10 @@ export default function DashboardPage() {
         
         // After getting profile, analyze it with Gemini
         if (data.profile) {
-          await analyzeProfile(data.profile);
+          await Promise.all([
+            analyzeProfile(data.profile),
+            generateThreads(data.profile)
+          ]);
         }
       } else {
         console.error('Failed to load profile:', await response.text());
@@ -141,6 +146,81 @@ export default function DashboardPage() {
     }
   };
 
+  const generateThreads = async (profileData: Profile) => {
+    try {
+      setThreadsLoading(true);
+      console.log('Starting threads generation with Gemini...');
+      
+      // Create assessment text from profile data (same as analysis)
+      const textParts = [];
+      
+      if (profileData.purpose.trim()) {
+        textParts.push(`Purpose: ${profileData.purpose}`);
+      }
+      
+      if (profileData.vision.trim()) {
+        textParts.push(`Vision: ${profileData.vision}`);
+      }
+      
+      if (profileData.values.length > 0) {
+        const validValues = profileData.values.filter(v => v.trim());
+        if (validValues.length > 0) {
+          textParts.push(`Values: ${validValues.join(', ')}`);
+        }
+      }
+      
+      // Add user responses to assessment questions
+      if (profileData.selfAssessment.questions.length > 0) {
+        const validResponses = profileData.selfAssessment.questions.filter(q => q.trim());
+        if (validResponses.length > 0) {
+          textParts.push(`Assessment Responses: ${validResponses.join(' | ')}`);
+        }
+      }
+      
+      const assessmentText = textParts.join(' | ');
+      
+      const response = await fetch('/api/generate-threads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ assessmentText }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Threads generation completed:', data.threads);
+        setThreadsToWeave(data.threads);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to generate threads:', errorData);
+        
+        // Fall back to sample data if generation fails
+        setThreadsToWeave([
+          "Daily Reflection — Set aside 10 minutes each evening to journal about your growth journey.",
+          "Purpose Practice — Align one daily action with your stated purpose this week.",
+          "Value Check — Notice when your decisions contradict your values and course-correct mindfully.",
+          "Growth Challenge — Try one new skill or habit that stretches your comfort zone.",
+          "Connection Ritual — Reach out to someone important in your life with genuine appreciation."
+        ]);
+      }
+    } catch (error) {
+      console.error('Error generating threads:', error);
+      
+      // Fall back to sample data if generation fails
+      setThreadsToWeave([
+        "Daily Reflection — Set aside 10 minutes each evening to journal about your growth journey.",
+        "Purpose Practice — Align one daily action with your stated purpose this week.",
+        "Value Check — Notice when your decisions contradict your values and course-correct mindfully.",
+        "Growth Challenge — Try one new skill or habit that stretches your comfort zone.",
+        "Connection Ritual — Reach out to someone important in your life with genuine appreciation."
+      ]);
+    } finally {
+      setThreadsLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <AuthGuard>
@@ -173,15 +253,6 @@ export default function DashboardPage() {
       </AuthGuard>
     );
   }
-
-  // Sample threads to weave data
-  const threadsToWeave = [
-    "Develop a consistent morning routine",
-    "Strengthen relationships with family",
-    "Learn a new skill each month",
-    "Practice mindfulness meditation",
-    "Create a vision board"
-  ];
 
   return (
     <AuthGuard>
@@ -281,17 +352,44 @@ export default function DashboardPage() {
                       🧵 Threads to Weave
                     </h2>
                     <p className="text-primary-600 mb-4">
-                      Your upcoming goals and areas for focused growth
+                      Personalized actionable steps for your unique growth journey, crafted by Athena's wisdom
                     </p>
                     <div className="bg-white p-4 rounded border border-green-200">
-                      <div className="space-y-3">
-                        {threadsToWeave.map((thread, index) => (
-                          <div key={index} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                            <div className="w-2 h-2 bg-primary-600 rounded-full flex-shrink-0"></div>
-                            <p className="text-gray-700 font-medium">{thread}</p>
+                      {threadsLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-3"></div>
+                            <p className="text-gray-600 font-medium">Athena is weaving your personal threads...</p>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ) : threadsToWeave.length > 0 ? (
+                        <div className="space-y-3">
+                          {threadsToWeave.map((thread, index) => {
+                            // Split thread into title and description
+                            const parts = thread.split(' — ');
+                            const title = parts[0];
+                            const description = parts[1] || '';
+                            
+                            return (
+                              <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="flex items-start space-x-4">
+                                  <div className="w-2 h-2 bg-primary-600 rounded-full flex-shrink-0 mt-2"></div>
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold text-primary-700 mb-1">{title}</h4>
+                                    {description && (
+                                      <p className="text-gray-600 text-sm">{description}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center py-8">
+                          <p className="text-gray-500">No threads available yet</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -299,7 +397,7 @@ export default function DashboardPage() {
                   <div className="text-center pt-4">
                     <Link
                       href="/chat"
-                      className="bg-gold-500 hover:bg-gold-600 text-white px-10 py-4 rounded-lg font-bold text-xl transition-colors shadow-lg inline-block"
+                      className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors shadow-lg inline-block"
                     >
                       Ask Athena
                     </Link>
