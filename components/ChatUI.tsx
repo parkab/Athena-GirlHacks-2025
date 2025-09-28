@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { PERSONALITIES } from "../lib/personalities";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -8,11 +9,17 @@ interface Message {
   timestamp: Date;
 }
 
+// determine a safe default personality id
+const personalitiesList = Object.values(PERSONALITIES);
+const defaultPersonalityId = personalitiesList[0]?.id ?? 'athena';
+
 export default function ChatUI() {
+  const [personalityId, setPersonalityId] = useState<string>(defaultPersonalityId);
+
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Greetings, seeker of wisdom. I am Athena, goddess of wisdom and strategic warfare. How may I guide you on your path to excellence today?',
+      content: `${PERSONALITIES[personalityId]?.name ?? 'Athena'}: Greetings, seeker of wisdom. I am Athena, goddess of wisdom and strategic warfare. How may I guide you on your path to excellence today?`,
       timestamp: new Date()
     }
   ]);
@@ -27,6 +34,20 @@ export default function ChatUI() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // keep the initial assistant greeting in sync if user changes personality before any messages
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length === 1 && prev[0].role === 'assistant') {
+        return [{
+          ...prev[0],
+          content: `${PERSONALITIES[personalityId]?.name ?? 'Athena'}: Greetings, seeker of wisdom. I am ${PERSONALITIES[personalityId]?.name ?? 'Athena'}. How may I guide you on your path to excellence today?`
+        }];
+      }
+      return prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [personalityId]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +70,7 @@ export default function ChatUI() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: input.trim() }),
+        body: JSON.stringify({ message: input.trim(), personalityId }),
       });
 
       const data = await response.json();
@@ -68,7 +89,7 @@ export default function ChatUI() {
       console.error('Error sending message:', error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: 'I apologize, but I&apos;m having trouble connecting to my wisdom at the moment. Please try again.',
+        content: 'I apologize, but I\'m having trouble connecting to my wisdom at the moment. Please try again.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -81,15 +102,33 @@ export default function ChatUI() {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="bg-white border-b-2 border-gold-200 p-4 shadow-sm">
-        <div className="flex items-center">
-          <div className="text-2xl mr-3">🦉</div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="text-2xl mr-3">🦉</div>
+            <div>
+              <h2 className="text-xl font-serif font-bold text-primary-800">
+                {PERSONALITIES[personalityId]?.name ?? "Athena's Wisdom"}
+              </h2>
+              <p className="text-sm text-primary-600">
+                {PERSONALITIES[personalityId]?.description ?? 'Goddess of Wisdom • Strategic Thinking • Personal Growth'}
+              </p>
+            </div>
+          </div>
+
+          {/* Personality selector */}
           <div>
-            <h2 className="text-xl font-serif font-bold text-primary-800">
-              Athena&apos;s Wisdom
-            </h2>
-            <p className="text-sm text-primary-600">
-              Goddess of Wisdom • Strategic Thinking • Personal Growth
-            </p>
+            <label className="text-xs text-primary-600 mr-2">Persona</label>
+            <select
+              value={personalityId}
+              onChange={(e) => setPersonalityId(e.target.value)}
+              className="p-2 border rounded bg-white"
+            >
+              {Object.values(PERSONALITIES).map((p: any) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -110,7 +149,7 @@ export default function ChatUI() {
             >
               {message.role === 'assistant' && (
                 <div className="flex items-center mb-2">
-                  <span className="text-gold-600 text-sm font-semibold">Athena</span>
+                  <span className="text-gold-600 text-sm font-semibold">{PERSONALITIES[personalityId]?.name ?? 'Athena'}</span>
                 </div>
               )}
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -130,9 +169,9 @@ export default function ChatUI() {
         
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white border-2 border-gold-200 text-gray-800 max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
+            <div className="bg-white border-2 border-gold-200 text-gray-800 max-w-xs lg-max-w-md px-4 py-2 rounded-lg">
               <div className="flex items-center mb-2">
-                <span className="text-gold-600 text-sm font-semibold">Athena</span>
+                <span className="text-gold-600 text-sm font-semibold">{PERSONALITIES[personalityId]?.name ?? 'Athena'}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <div className="w-2 h-2 bg-gold-500 rounded-full animate-bounce"></div>

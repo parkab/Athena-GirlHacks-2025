@@ -4,8 +4,6 @@
 
 // For API routes, you don't need to prefix with NEXT_PUBLIC_ for server-side use.
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
-
 const GEMINI_MODEL_ID = 'gemini-2.5-flash'; // Change model as needed
 
 // --- Alternative URLS ---
@@ -15,7 +13,7 @@ const GEMINI_MODEL_ID = 'gemini-2.5-flash'; // Change model as needed
 
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_ID}:generateContent`;
 
-
+import { PERSONALITIES } from "./personalities";  
 // --- Type Definitions for Gemini API Request ---
 
 // Defines a part in the request
@@ -108,7 +106,8 @@ interface UserProfileContext {
  */
 export async function getPersonalizedAdvice(
   userMessage: string,
-  userProfile?: UserProfileContext
+  userProfile?: UserProfileContext,
+  personalityId?: string
 ): Promise<string> {
   if (!GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY is not set in environment variables.');
@@ -116,6 +115,10 @@ export async function getPersonalizedAdvice(
 
   // 1. Construct the comprehensive prompt string
   let fullPrompt = `The user is asking: "${userMessage}"`;
+
+  if (!personalityId)
+    personalityId = "hermes"; // default personality
+    const personality = PERSONALITIES[personalityId] ?? PERSONALITIES["athena"];
 
   if (userProfile) {
     fullPrompt += `
@@ -126,7 +129,18 @@ Here is some context about the user's personal framework:
 - Values: ${userProfile.values}
 - Self-assessment: ${userProfile.selfAssessment}
 
-Based on this context and striving for a supportive, empathetic, and actionable tone, please provide personalized advice or a thoughtful response to their query. Your response should directly address their message while integrating insights from their profile. Keep the response concise and to the point.`;
+${personality.systemPrompt}
+
+Use clear, concise language. Avoid overly theatrical or poetic phrasing.  
+Limit roleplay. You are a mentor/coach inspired by the god, who in addition speaks largely in modern language and tone.
+Try to keep your response within 3 paragraphs or about 200 words unless explicitly asked for more detail.
+`; //Here is the GOD
+
+// Based on this context and striving for a supportive, empathetic, and actionable tone, 
+// please provide personalized advice or a thoughtful response to their query. 
+// Your response should directly address their message while integrating insights from their profile. 
+// Keep the response concise and to the point.`;
+
   } else {
     fullPrompt += `
 
