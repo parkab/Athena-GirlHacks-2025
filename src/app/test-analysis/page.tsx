@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import RadarChart from '@/components/RadarChart';
+import { useState } from 'react';
 
 interface AssessmentCategories {
   Habits: number;

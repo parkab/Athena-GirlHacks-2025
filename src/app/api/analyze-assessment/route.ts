@@ -1,5 +1,5 @@
+import { analyzeAssessmentCategories, analyzeUserProfile, extractAssessmentText } from '@/lib/gemini';
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeUserProfile, extractAssessmentText, analyzeAssessmentCategories } from '@/lib/gemini';
 
 export async function POST(request: NextRequest) {
   try {

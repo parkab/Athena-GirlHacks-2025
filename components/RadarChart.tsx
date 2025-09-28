@@ -1,16 +1,16 @@
 'use client';
 
-import React from 'react';
 import {
-  Chart as ChartJS,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend,
-  ChartOptions
+    Chart as ChartJS,
+    ChartOptions,
+    Filler,
+    Legend,
+    LineElement,
+    PointElement,
+    RadialLinearScale,
+    Tooltip
 } from 'chart.js';
+import React from 'react';
 import { Radar } from 'react-chartjs-2';
 
 // Register Chart.js components
