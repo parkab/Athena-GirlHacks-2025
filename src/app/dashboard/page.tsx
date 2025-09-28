@@ -27,7 +27,9 @@ export default function DashboardPage() {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch('/api/profile', { credentials: 'include' });
+      // include credentials so the token cookie is sent
+      const response = await fetch('/api/profile', { headers: { authorization: 'Bearer ' + localStorage.getItem('token') } });
+
       if (response.status === 401) {
         router.push('/login');
         return;
@@ -78,15 +80,20 @@ export default function DashboardPage() {
     );
   }
 
-  // Sample radar chart data - scores should be between 0.0 and 1.0
-  const radarScores = {
-    Mindset: 0.8,
-    Health: 0.6,
-    Relationships: 0.7,
-    Purpose: 0.9,
-    Learning: 0.5,
-    Creativity: 0.6
-  };
+
+  return (
+    <AuthGuard>
+    <div className="min-h-screen bg-temple py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-serif font-bold text-primary-800 mb-4">
+            Your Temple of Growth
+          </h1>
+          <p className="text-lg text-primary-600">
+            Track your progress on the path to excellence
+          </p>
+        </div>
 
   // Sample threads to weave data
   const threadsToWeave = [
