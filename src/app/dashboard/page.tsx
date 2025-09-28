@@ -4,7 +4,7 @@ import AuthGuard from '@/components/AuthGuard';
 import RadarChart from '@/components/RadarChart';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface Profile {
   purpose: string;
@@ -35,11 +35,7 @@ export default function DashboardPage() {
   const [threadsToWeave, setThreadsToWeave] = useState<string[]>([]);
   const [threadsLoading, setThreadsLoading] = useState(false);
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       // include credentials so the token cookie is sent
       const response = await fetch('/api/profile', { headers: { authorization: 'Bearer ' + localStorage.getItem('token') } });
@@ -67,7 +63,11 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const analyzeProfile = async (profileData: Profile) => {
     try {
@@ -290,11 +290,11 @@ export default function DashboardPage() {
                     <div className="space-y-4">
                       <div>
                         <h3 className="text-lg font-serif font-semibold text-primary-700 mb-2">Purpose</h3>
-                        <p className="text-gray-700 italic leading-relaxed bg-white p-3 rounded border border-primary-200">"{profile.purpose}"</p>
+                        <p className="text-gray-700 italic leading-relaxed bg-white p-3 rounded border border-primary-200">&ldquo;{profile.purpose}&rdquo;</p>
                       </div>
                       <div>
                         <h3 className="text-lg font-serif font-semibold text-primary-700 mb-2">Vision</h3>
-                        <p className="text-gray-700 italic leading-relaxed bg-white p-3 rounded border border-primary-200">"{profile.vision}"</p>
+                        <p className="text-gray-700 italic leading-relaxed bg-white p-3 rounded border border-primary-200">&ldquo;{profile.vision}&rdquo;</p>
                       </div>
                       <div>
                         <h3 className="text-lg font-serif font-semibold text-primary-700 mb-2">Values</h3>
@@ -354,7 +354,7 @@ export default function DashboardPage() {
                       🧵 Threads to Weave
                     </h2>
                     <p className="text-primary-600 mb-4">
-                      Personalized actionable steps for your unique growth journey, crafted by Athena's wisdom
+                      Personalized actionable steps for your unique growth journey, crafted by Athena&apos;s wisdom
                     </p>
                     <div className="bg-white p-4 rounded border border-green-200">
                       {threadsLoading ? (
