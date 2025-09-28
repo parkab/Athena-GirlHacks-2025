@@ -8,7 +8,8 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const { message } = await request.json();
+    const body: any = await request.json(); // <-- parse body directly
+    const { message, personalityId } = body ?? {};
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       // Continue without profile context
     }
 
-    const response = await getPersonalizedAdvice(message, userProfile);
+    const response = await getPersonalizedAdvice(message, userProfile, personalityId);
 
     return NextResponse.json({ success: true, response });
   } catch (error: unknown) {
