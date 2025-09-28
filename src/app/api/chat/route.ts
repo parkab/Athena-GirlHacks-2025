@@ -3,6 +3,9 @@ import { getPersonalizedAdvice } from '@/lib/gemini';
 import UserProfile from '@/lib/models';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { message } = await request.json();
