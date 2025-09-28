@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { PERSONALITIES } from "../lib/personalities";
+import { PERSONALITIES, type Personality } from "../lib/personalities";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -175,7 +175,7 @@ export default function ChatUI() {
                 className="p-2 border rounded bg-white text-sm w-full"
               >
                 <option value="" disabled>I want to talk to...</option>
-                {Object.values(PERSONALITIES).map((p: any) => (
+                {Object.values(PERSONALITIES).map((p: Personality) => (
                   <option key={p.id} value={p.id}>
                     {p.fname ?? p.name ?? p.id}
                   </option>
