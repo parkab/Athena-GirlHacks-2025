@@ -7,6 +7,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  senderName?: string; // added: store name used when message was created
 }
 
 // determine a safe default personality id
@@ -14,13 +15,14 @@ const personalitiesList = Object.values(PERSONALITIES);
 const defaultPersonalityId = personalitiesList[0]?.id ?? 'athena';
 
 export default function ChatUI() {
-  const [personalityId, setPersonalityId] = useState<string>(defaultPersonalityId);
+   const [personalityId, setPersonalityId] = useState<string>('');
 
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: `${PERSONALITIES[personalityId]?.name ?? 'Athena'}: Greetings, seeker of wisdom. I am Athena, goddess of wisdom and strategic warfare. How may I guide you on your path to excellence today?`,
-      timestamp: new Date()
+      content: `Greetings, seeker of wisdom. I am Athena, goddess of wisdom and strategic warfare. How may I guide you on your path to excellence today?`,
+      timestamp: new Date(),
+      senderName: PERSONALITIES[defaultPersonalityId]?.name ?? 'Athena' // store initial display name
     }
   ]);
   const [input, setInput] = useState('');
@@ -35,13 +37,15 @@ export default function ChatUI() {
     scrollToBottom();
   }, [messages]);
 
-  // keep the initial assistant greeting in sync if user changes personality before any messages
+  // keep the initial assistant greeting text in sync only if not replaced,
+  // but do NOT overwrite senderName so displayed name stays static per message
   useEffect(() => {
     setMessages(prev => {
       if (prev.length === 1 && prev[0].role === 'assistant') {
         return [{
           ...prev[0],
-          content: `${PERSONALITIES[personalityId]?.name ?? 'Athena'}: Greetings, seeker of wisdom. I am ${PERSONALITIES[personalityId]?.name ?? 'Athena'}. How may I guide you on your path to excellence today?`
+          content: `Greetings, seeker of wisdom. I am Athena. How may I guide you on your path to excellence today? \n\nI can also connect you with a few of my fellow gods if you'd like!`,
+          // keep prev[0].senderName unchanged unless user uses selector inside the bubble
         }];
       }
       return prev;
@@ -79,7 +83,8 @@ export default function ChatUI() {
         const assistantMessage: Message = {
           role: 'assistant',
           content: data.response,
-          timestamp: new Date()
+          timestamp: new Date(),
+          senderName: PERSONALITIES[personalityId]?.name ?? 'Athena' // store name now so it won't change later
         };
         setMessages(prev => [...prev, assistantMessage]);
       } else {
@@ -90,12 +95,25 @@ export default function ChatUI() {
       const errorMessage: Message = {
         role: 'assistant',
         content: 'I apologize, but I\'m having trouble connecting to my wisdom at the moment. Please try again.',
-        timestamp: new Date()
+        timestamp: new Date(),
+        senderName: PERSONALITIES[personalityId]?.name ?? 'Athena'
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // update personality and also update the first assistant bubble's senderName
+  const handlePersonaChange = (newId: string) => {
+    setPersonalityId(newId);
+    setMessages(prev =>
+      prev.map((m, i) =>
+        i === 0 && m.role === 'assistant'
+          ? { ...m, senderName: "Athena"}
+          : m
+      )
+    );
   };
 
   return (
@@ -107,65 +125,67 @@ export default function ChatUI() {
             <div className="text-2xl mr-3">🦉</div>
             <div>
               <h2 className="text-xl font-serif font-bold text-primary-800">
-                {PERSONALITIES[personalityId]?.name ?? "Athena's Wisdom"}
+                {"Athena's Wisdom"}
               </h2>
               <p className="text-sm text-primary-600">
-                {PERSONALITIES[personalityId]?.description ?? 'Goddess of Wisdom • Strategic Thinking • Personal Growth'}
+                {/* optional description */}
               </p>
             </div>
           </div>
 
-          {/* Personality selector */}
-          <div>
-            <label className="text-xs text-primary-600 mr-2">Persona</label>
-            <select
-              value={personalityId}
-              onChange={(e) => setPersonalityId(e.target.value)}
-              className="p-2 border rounded bg-white"
-            >
-              {Object.values(PERSONALITIES).map((p: any) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Removed top-level selector; it's now inside the first message bubble */}
         </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-temple">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                message.role === 'user'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-white border-2 border-gold-200 text-gray-800'
-              }`}
-            >
-              {message.role === 'assistant' && (
-                <div className="flex items-center mb-2">
-                  <span className="text-gold-600 text-sm font-semibold">{PERSONALITIES[personalityId]?.name ?? 'Athena'}</span>
-                </div>
-              )}
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-              <div
-                className={`text-xs mt-1 ${
-                  message.role === 'user' ? 'text-primary-200' : 'text-gray-500'
-                }`}
-              >
-                {message.timestamp.toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+    {messages.map((message, index) => (
+      <div
+        key={index}
+        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+      >
+        <div
+          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+            message.role === 'user'
+              ? 'bg-primary-600 text-white '
+              : 'bg-white border-2 border-gold-200 text-gray-800'
+          }`}
+        >
+          {message.role === 'assistant' && (
+            <div className="mb-2">
+              <div className="flex items-center">
+                <span className="text-gold-600 text-sm font-semibold">
+                  {message.senderName ?? PERSONALITIES[personalityId]?.name ?? 'Athena'}
+                </span>
               </div>
             </div>
+          )}
+
+          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+        </div>
+
+        {/* dropdown moved below the first assistant bubble (outside the bubble div) */}
+        {message.role === 'assistant' && index === 0 && (
+          <div className="w-full flex justify-center mt-3">
+            <div className="max-w-md w-full">
+              <label className="sr-only">Select Persona</label>
+              <select
+                value={personalityId}
+                onChange={(e) => handlePersonaChange(e.target.value)}
+                className="p-2 border rounded bg-white text-sm w-full"
+              >
+                <option value="" disabled>I want to talk to...</option>
+                {Object.values(PERSONALITIES).map((p: any) => (
+                  <option key={p.id} value={p.id}>
+                    {p.fname ?? p.name ?? p.id}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        ))}
+        )}
+      </div>
+    ))}
         
         {isLoading && (
           <div className="flex justify-start">
@@ -191,8 +211,8 @@ export default function ChatUI() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask Athena for wisdom and guidance..."
-            className="flex-1 p-3 border-2 border-primary-200 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            placeholder={`Ask ${PERSONALITIES[personalityId]?.name ?? 'Athena'} for wisdom and guidance...`}
+            className="text-gray-900 flex-1 p-3 border-2 border-primary-200 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
             disabled={isLoading}
           />
           <button

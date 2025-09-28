@@ -127,7 +127,7 @@ export default function ProfileForm() {
             <textarea
               value={formData.purpose}
               onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
-              className="w-full h-32 p-4 border-2 border-primary-200 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+              className="text-gray-900 w-full h-32 p-4 border-2 border-primary-200 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
               placeholder="My purpose is to..."
               required
             />
@@ -144,7 +144,7 @@ export default function ProfileForm() {
             <textarea
               value={formData.vision}
               onChange={(e) => setFormData(prev => ({ ...prev, vision: e.target.value }))}
-              className="w-full h-32 p-4 border-2 border-gold-200 rounded-lg focus:border-gold-500 focus:ring-2 focus:ring-gold-200"
+              className="text-gray-900 w-full h-32 p-4 border-2 border-gold-200 rounded-lg focus:border-gold-500 focus:ring-2 focus:ring-gold-200"
               placeholder="My vision is..."
               required
             />
@@ -164,7 +164,7 @@ export default function ProfileForm() {
                   type="text"
                   value={value}
                   onChange={(e) => updateValue(index, e.target.value)}
-                  className="flex-1 p-3 border-2 border-primary-200 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                  className="text-gray-900 flex-1 p-3 border-2 border-primary-200 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                   placeholder="Enter a core value..."
                 />
                 {formData.values.length > 1 && (
@@ -202,7 +202,7 @@ export default function ProfileForm() {
                     value={formData.selfAssessment.questions[index]}
                     onChange={(e) => updateQuestion(index, e.target.value)}
                     rows={3}
-                    className="w-full p-3 border-2 border-gold-200 rounded-lg focus:border-gold-500 focus:ring-2 focus:ring-gold-200"
+                    className="text-gray-900 w-full p-3 border-2 border-gold-200 rounded-lg focus:border-gold-500 focus:ring-2 focus:ring-gold-200"
                     placeholder="Write your response..."
                   />
                 </div>

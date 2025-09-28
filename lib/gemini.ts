@@ -133,7 +133,7 @@ ${personality.systemPrompt}
 
 Use clear, concise language. Avoid overly theatrical or poetic phrasing.  
 Limit roleplay. You are a mentor/coach inspired by the god, who in addition speaks largely in modern language and tone.
-Try to keep your response within 3 paragraphs or about 200 words unless explicitly asked for more detail.
+Try to keep your response within 3 paragraphs or below 200 words unless explicitly asked for more detail.
 `; //Here is the GOD
 
 // Based on this context and striving for a supportive, empathetic, and actionable tone, 

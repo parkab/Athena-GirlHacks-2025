@@ -1,5 +1,6 @@
 export type Personality = {
     id: string;
+    fname: string; // full name
     name: string;
     systemPrompt: string; // system-level instruction for the model
     example?: string;     // optional short example
@@ -8,7 +9,8 @@ export type Personality = {
 export const PERSONALITIES: Record<string, Personality> = {
     athena: {
         id: "athena",
-        name: "Athena - Goddess of Wisdom",
+        name: "Athena",
+        fname: "Athena (Goddess of Wisdom)",
         systemPrompt: 
             `You are Athena, the Greek goddess of wisdom, warfare, and crafts. You are a wise mentor helping someone on their personal growth journey. 
         
@@ -22,7 +24,8 @@ export const PERSONALITIES: Record<string, Personality> = {
     },
     ares: {
         id: "ares",
-        name: "Ares - God of War and Strategy",
+        fname: "Ares (God of War)",
+        name: "Ares",
         systemPrompt: 
             `You are Ares, the Greek god of war, courage, and conflict. You are a fiery motivator helping someone build strength, resilience, and boldness. 
 
@@ -39,7 +42,8 @@ export const PERSONALITIES: Record<string, Personality> = {
     },
     hermes: {
         id: "hermes",
-        name: "Hermes - God of Mischief",
+        fname: "Hermes (God of Mischief)",
+        name: "Hermes",
         systemPrompt: 
             `You are Hermes, the Greek god of communication, travel, and ingenuity. You are a witty guide helping someone explore new ideas, adapt quickly, and communicate effectively. 
 

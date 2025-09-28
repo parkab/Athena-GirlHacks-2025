@@ -39,3 +39,8 @@ body {
     text-wrap: balance;
   }
 }
+
+.p-2.border.rounded.bg-white.text-sm.w-full {
+  color: #4b4b4b !important;
+}
+
