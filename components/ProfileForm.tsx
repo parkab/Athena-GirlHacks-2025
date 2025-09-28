@@ -8,22 +8,33 @@ interface ProfileFormData {
   vision: string;
   values: string[];
   selfAssessment: {
-    currentLevel: number;
-    goals: string[];
-    challenges: string[];
+    questions: string[]; // fixed 12 questions
   };
 }
 
 export default function ProfileForm() {
   const router = useRouter();
+  const PROMPTS = [
+    'What are some habits you wish to build or change right now, and why?',
+    'What beliefs or fears have held you back from pursuing personal growth in the past?',
+    'How do you typically respond to setbacks – do you learn from them or dwell on them?',
+    'What is an area in your life where you wish you were more consistent (health, study, relationships, etc.)?',
+    'Which daily routines or rituals help you feel most grounded and effective?',
+    'Are there social pressures or outside expectations that influence your choices more than you want?',
+    'What specific skills or knowledge do you want to develop over the next year?',
+    'Who inspires you, and what qualities do they possess that you’d like to cultivate yourself?',
+    'How do you measure progress toward your goals—what does success look like for you?',
+    'What is one small change you could make this week that might lead to bigger improvements over time?',
+    'When do you feel most fulfilled or “in flow”—what activities are you doing?',
+    'How often do you intentionally reflect on your personal growth journey?'
+  ];
   const [formData, setFormData] = useState<ProfileFormData>({
     purpose: '',
     vision: '',
     values: [''],
     selfAssessment: {
-      currentLevel: 5,
-      goals: [''],
-      challenges: ['']
+      // store user responses here; prompts are kept in PROMPTS
+      questions: Array(PROMPTS.length).fill('')
     }
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,62 +60,12 @@ export default function ProfileForm() {
     }));
   };
 
-  const addGoal = () => {
+  const updateQuestion = (index: number, text: string) => {
     setFormData(prev => ({
       ...prev,
       selfAssessment: {
         ...prev.selfAssessment,
-        goals: [...prev.selfAssessment.goals, '']
-      }
-    }));
-  };
-
-  const removeGoal = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      selfAssessment: {
-        ...prev.selfAssessment,
-        goals: prev.selfAssessment.goals.filter((_, i) => i !== index)
-      }
-    }));
-  };
-
-  const updateGoal = (index: number, goal: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selfAssessment: {
-        ...prev.selfAssessment,
-        goals: prev.selfAssessment.goals.map((g, i) => i === index ? goal : g)
-      }
-    }));
-  };
-
-  const addChallenge = () => {
-    setFormData(prev => ({
-      ...prev,
-      selfAssessment: {
-        ...prev.selfAssessment,
-        challenges: [...prev.selfAssessment.challenges, '']
-      }
-    }));
-  };
-
-  const removeChallenge = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      selfAssessment: {
-        ...prev.selfAssessment,
-        challenges: prev.selfAssessment.challenges.filter((_, i) => i !== index)
-      }
-    }));
-  };
-
-  const updateChallenge = (index: number, challenge: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selfAssessment: {
-        ...prev.selfAssessment,
-        challenges: prev.selfAssessment.challenges.map((c, i) => i === index ? challenge : c)
+        questions: prev.selfAssessment.questions.map((q, i) => i === index ? text : q)
       }
     }));
   };
@@ -118,9 +79,7 @@ export default function ProfileForm() {
         ...formData,
         values: formData.values.filter(v => v.trim()),
         selfAssessment: {
-          ...formData.selfAssessment,
-          goals: formData.selfAssessment.goals.filter(g => g.trim()),
-          challenges: formData.selfAssessment.challenges.filter(c => c.trim())
+          questions: formData.selfAssessment.questions.map(q => q.trim()).filter(Boolean)
         }
       };
 
@@ -234,92 +193,20 @@ export default function ProfileForm() {
               📊 Self Assessment
             </h2>
 
-            {/* Current Level */}
-            <div className="mb-6">
-              <label className="block text-primary-700 font-semibold mb-2">
-                Current Level (1-10): {formData.selfAssessment.currentLevel}
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                value={formData.selfAssessment.currentLevel}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  selfAssessment: {
-                    ...prev.selfAssessment,
-                    currentLevel: parseInt(e.target.value)
-                  }
-                }))}
-                className="w-full h-2 bg-gold-200 rounded-lg appearance-none cursor-pointer"
-              />
-              <p className="text-sm text-primary-600 mt-1">
-                Rate your current level of personal development and life satisfaction
-              </p>
-            </div>
-
-            {/* Goals */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-primary-700 mb-3">Goals</h3>
-              {formData.selfAssessment.goals.map((goal, index) => (
-                <div key={index} className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={goal}
-                    onChange={(e) => updateGoal(index, e.target.value)}
-                    className="flex-1 p-3 border-2 border-gold-200 rounded-lg focus:border-gold-500 focus:ring-2 focus:ring-gold-200"
-                    placeholder="Enter a goal..."
+            <div className="grid gap-6">
+              {PROMPTS.map((prompt, index) => (
+                <div key={index}>
+                  <label className="block text-primary-700 font-semibold mb-2">Question {index + 1}</label>
+                  <p className="text-sm text-primary-600 mb-2">{prompt}</p>
+                  <textarea
+                    value={formData.selfAssessment.questions[index]}
+                    onChange={(e) => updateQuestion(index, e.target.value)}
+                    rows={3}
+                    className="w-full p-3 border-2 border-gold-200 rounded-lg focus:border-gold-500 focus:ring-2 focus:ring-gold-200"
+                    placeholder="Write your response..."
                   />
-                  {formData.selfAssessment.goals.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeGoal(index)}
-                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                    >
-                      Remove
-                    </button>
-                  )}
                 </div>
               ))}
-              <button
-                type="button"
-                onClick={addGoal}
-                className="mt-2 px-4 py-2 bg-gold-600 text-white rounded-lg hover:bg-gold-700"
-              >
-                Add Goal
-              </button>
-            </div>
-
-            {/* Challenges */}
-            <div>
-              <h3 className="text-lg font-semibold text-primary-700 mb-3">Challenges</h3>
-              {formData.selfAssessment.challenges.map((challenge, index) => (
-                <div key={index} className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={challenge}
-                    onChange={(e) => updateChallenge(index, e.target.value)}
-                    className="flex-1 p-3 border-2 border-gold-200 rounded-lg focus:border-gold-500 focus:ring-2 focus:ring-gold-200"
-                    placeholder="Enter a challenge..."
-                  />
-                  {formData.selfAssessment.challenges.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeChallenge(index)}
-                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addChallenge}
-                className="mt-2 px-4 py-2 bg-gold-600 text-white rounded-lg hover:bg-gold-700"
-              >
-                Add Challenge
-              </button>
             </div>
           </div>
 

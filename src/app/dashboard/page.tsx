@@ -9,9 +9,7 @@ interface Profile {
   vision: string;
   values: string[];
   selfAssessment: {
-    currentLevel: number;
-    goals: string[];
-    challenges: string[];
+    questions: string[];
   };
   createdAt: string;
 }
@@ -102,10 +100,10 @@ export default function DashboardPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <DashboardCard
-            icon="📊"
-            title="Current Level"
-            value={profile.selfAssessment.currentLevel}
-            description="Your self-assessed development level"
+            icon="�"
+            title="Reflections Answered"
+            value={profile.selfAssessment.questions.filter(Boolean).length}
+            description="Number of self-reflection responses"
             color="primary"
           />
           <DashboardCard
@@ -124,9 +122,9 @@ export default function DashboardPage() {
           />
           <DashboardCard
             icon="🎯"
-            title="Active Goals"
-            value={profile.selfAssessment.goals.length}
-            description="Goals you're working towards"
+            title="Answered Prompts"
+            value={profile.selfAssessment.questions.filter(Boolean).length}
+            description="Prompts you've responded to"
             color="primary"
           />
         </div>
@@ -164,12 +162,12 @@ export default function DashboardPage() {
               </div>
               
               <div>
-                <h3 className="text-lg font-semibold text-green-700 mb-2">Current Goals</h3>
-                <ul className="space-y-2">
-                  {profile.selfAssessment.goals.map((goal, index) => (
-                    <li key={index} className="flex items-center text-gray-700">
-                      <span className="text-green-500 mr-2">→</span>
-                      {goal}
+                <h3 className="text-lg font-semibold text-green-700 mb-2">Self Reflections</h3>
+                <ul className="space-y-4">
+                  {profile.selfAssessment.questions.map((answer, index) => (
+                    <li key={index} className="text-gray-700">
+                      <div className="text-sm text-primary-600 font-semibold mb-1">Question {index + 1}</div>
+                      <div className="bg-primary-50 p-4 rounded-lg">{answer || <span className="text-gray-400">No response</span>}</div>
                     </li>
                   ))}
                 </ul>

@@ -5,9 +5,7 @@ export interface IUserProfile extends mongoose.Document {
   vision: string;
   values: string[];
   selfAssessment: {
-    currentLevel: number;
-    goals: string[];
-    challenges: string[];
+    questions: string[];
   };
   createdAt: Date;
   updatedAt: Date;
@@ -30,21 +28,10 @@ const UserProfileSchema = new mongoose.Schema({
     maxlength: [100, 'Each value cannot exceed 100 characters']
   }],
   selfAssessment: {
-    currentLevel: {
-      type: Number,
-      required: [true, 'Please provide your current level assessment'],
-      min: [1, 'Level must be between 1-10'],
-      max: [10, 'Level must be between 1-10']
-    },
-    goals: [{
+    questions: [{
       type: String,
       required: true,
-      maxlength: [200, 'Each goal cannot exceed 200 characters']
-    }],
-    challenges: [{
-      type: String,
-      required: true,
-      maxlength: [200, 'Each challenge cannot exceed 200 characters']
+      maxlength: [1000, 'Each response cannot exceed 1000 characters']
     }]
   }
 }, {
