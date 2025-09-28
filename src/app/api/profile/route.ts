@@ -1,7 +1,7 @@
+import { verifyToken } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import UserProfile from '@/lib/models';
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';

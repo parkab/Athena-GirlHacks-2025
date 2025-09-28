@@ -1,7 +1,7 @@
-import dbConnect from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
+import dbConnect from '@/lib/db';
 import User from '@/lib/user';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
