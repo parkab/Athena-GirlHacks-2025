@@ -1,14 +1,14 @@
 'use client';
 
 import {
-    Chart as ChartJS,
-    ChartOptions,
-    Filler,
-    Legend,
-    LineElement,
-    PointElement,
-    RadialLinearScale,
-    Tooltip
+  Chart as ChartJS,
+  ChartOptions,
+  Filler,
+  Legend,
+  LineElement,
+  PointElement,
+  RadialLinearScale,
+  Tooltip
 } from 'chart.js';
 import React from 'react';
 import { Radar } from 'react-chartjs-2';
@@ -156,33 +156,43 @@ const RadarChart: React.FC<RadarChartProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center p-6 bg-white rounded-lg shadow-lg">
-      <div style={{ width: `${width}px`, height: `${height}px`, maxWidth: '100%' }}>
-        <Radar data={data} options={options} />
+    <div className="flex flex-col lg:flex-row gap-8 p-4 bg-white rounded-lg shadow-lg">
+      {/* Left side - Radar Chart */}
+      <div className="flex justify-center items-center lg:justify-start flex-shrink-0">
+        <div style={{ width: `${Math.min(width, 350)}px`, height: `${Math.min(height, 350)}px`, maxWidth: '100%' }}>
+          <Radar data={data} options={options} />
+        </div>
       </div>
       
-      {/* Score Summary */}
-      <div className="mt-6 w-full max-w-md">
-        <h4 className="text-lg font-semibold text-gray-700 mb-3 text-center">Score Breakdown</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+      {/* Right side - Score Breakdown */}
+      <div className="flex-1 min-w-0 flex flex-col justify-center">
+        <h4 className="text-lg font-semibold text-gray-700 mb-4 text-center">Score Breakdown</h4>
+        <div className="space-y-3">
           {Object.entries(scores).map(([category, score]) => (
-            <div key={category} className="flex justify-between items-center px-3 py-2 bg-gray-50 rounded">
-              <span className="font-medium text-gray-700">
-                {category.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-              </span>
-              <span className="font-bold text-blue-600">
-                {Math.round(score * 100)}%
-              </span>
+            <div key={category} className="flex items-center gap p-3 bg-gray-50 rounded-lg">
+              {/* Category name - fixed width for alignment */}
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-gray-700 text-sm">
+                  {category.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                </span>
+              </div>
+              
+              {/* Progress bar - fixed width */}
+              <div className="w-24 bg-gray-200 rounded-full h-2.5 flex-shrink-0">
+                <div 
+                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                  style={{ width: `${score * 100}%` }}
+                ></div>
+              </div>
+              
+              {/* Percentage - fixed width for alignment */}
+              <div className="w-12 text-right flex-shrink-0">
+                <span className="text-sm font-semibold text-blue-600">
+                  {Math.round(score * 100)}%
+                </span>
+              </div>
             </div>
           ))}
-        </div>
-        
-        {/* Overall Score */}
-        <div className="mt-4 p-3 bg-blue-50 rounded-lg text-center">
-          <span className="text-sm text-blue-700 font-medium">Overall Average: </span>
-          <span className="text-lg font-bold text-blue-800">
-            {Math.round((Object.values(scores).reduce((sum, score) => sum + score, 0) / Object.values(scores).length) * 100)}%
-          </span>
         </div>
       </div>
     </div>
