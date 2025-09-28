@@ -3,18 +3,21 @@
 import RadarChart from '@/components/RadarChart';
 import { useState } from 'react';
 
-interface AssessmentCategories {
-  Habits: number;
-  Mindset: number;
-  Relationships: number;
-  Health: number;
-  Creativity: number;
-  Purpose: number;
-  Learning: number;
+interface AssessmentResult {
+  categories: {
+    Habits: number;
+    Mindset: number;
+    Relationships: number;
+    Health: number;
+    Creativity: number;
+    Purpose: number;
+    Learning: number;
+  };
+  extractedText: string;
 }
 
 export default function TestAssessmentAnalysis() {
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<AssessmentResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -151,7 +154,7 @@ export default function TestAssessmentAnalysis() {
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold mb-3">Sample Assessment Text:</h3>
             <p className="text-sm text-gray-600 mb-4 italic">
-              "{sampleAssessmentText}"
+              &ldquo;{sampleAssessmentText}&rdquo;
             </p>
             
             <h4 className="font-medium mb-2">Sample Profile Goals:</h4>
@@ -195,7 +198,7 @@ export default function TestAssessmentAnalysis() {
               {result.extractedText && (
                 <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                   <h3 className="font-semibold text-gray-700 mb-2">Extracted Text:</h3>
-                  <p className="text-sm text-gray-600 italic">"{result.extractedText}"</p>
+                  <p className="text-sm text-gray-600 italic">&ldquo;{result.extractedText}&rdquo;</p>
                 </div>
               )}
 
