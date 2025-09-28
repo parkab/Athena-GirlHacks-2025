@@ -1,7 +1,9 @@
 import ProfileForm from '@/components/ProfileForm';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function ProfilePage() {
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-temple py-12">
       <div className="relative">
         {/* Greek columns decoration */}
@@ -17,5 +19,6 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   );
 }

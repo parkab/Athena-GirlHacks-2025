@@ -1,11 +1,24 @@
 import dbConnect from '@/lib/db';
 import UserProfile from '@/lib/models';
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyToken } from '@/lib/auth';
+
+function getTokenFromReq(req: NextRequest) {
+  const auth = req.headers.get('authorization') || '';
+  if (auth.startsWith('Bearer ')) return auth.slice(7);
+  const cookie = req.headers.get('cookie') || '';
+  const match = cookie.match(/(?:^|;\s*)token=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { purpose, vision, values, selfAssessment } = body;
+
+    const token = getTokenFromReq(request);
+    const payload = token ? verifyToken(token) : null;
+    if (!payload) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
     const connection = await dbConnect();
     if (!connection) {
@@ -20,16 +33,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid selfAssessment.questions' }, { status: 400 });
     }
 
-    // For now, we'll create a new profile each time
-    // In a real app, you'd want user authentication and update existing profiles
-    const profile = new UserProfile({
+    // Upsert profile for the authenticated user (one profile per user)
+    const userId = payload.id;
+    const update = {
       purpose,
       vision,
       values,
-      selfAssessment
-    });
+      selfAssessment,
+      userId
+    };
 
-    await profile.save();
+    const profile = await UserProfile.findOneAndUpdate(
+      { userId },
+      update,
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
 
     return NextResponse.json({ success: true, profile }, { status: 201 });
   } catch (error: unknown) {
@@ -42,20 +60,21 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+// changed: allow GET(request) to return the profile for auth'd user
+export async function GET(request: NextRequest) {
   try {
+    const token = getTokenFromReq(request);
+    const payload = token ? verifyToken(token) : null;
+    if (!payload) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
     const connection = await dbConnect();
     if (!connection) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 503 }
-      );
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
     }
-    
-    // For simplicity, get the most recent profile
-    // In a real app, you'd get the profile for the authenticated user
-    const profile = await UserProfile.findOne().sort({ createdAt: -1 });
-    
+
+    const profile = await UserProfile.findOne({ userId: payload.id });
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
