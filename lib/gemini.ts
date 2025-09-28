@@ -160,7 +160,7 @@ Please provide advice or a response to their query. Keep the response concise an
     ],
     generationConfig: {
       temperature: 0.8,     // A bit more creative
-      maxOutputTokens: 2000, // Limit response length for conciseness
+      maxOutputTokens: 10000, // Limit response length for conciseness
     },
     safetySettings: [
       { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
@@ -347,7 +347,7 @@ Return JSON only in this format:
     ],
     generationConfig: {
       temperature: 0.1,     // Low temperature for consistent JSON output
-      maxOutputTokens: 4000,
+      maxOutputTokens: 10000,
     },
     safetySettings: [
       { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
@@ -438,6 +438,148 @@ export async function analyzeUserProfile(profileData: ProfileData): Promise<Asse
   }
   
   return await analyzeAssessmentCategories(assessmentText);
+}
+
+/**
+ * Generates personalized "Threads to Weave" using Gemini AI
+ * @param assessmentText The extracted assessment text to analyze
+ * @returns A promise that resolves to an array of thread suggestions
+ * @throws An error if the API key is missing or the API call fails
+ */
+export async function generateThreadsToWeave(assessmentText: string): Promise<string[]> {
+  if (!GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not set in environment variables.');
+  }
+
+  if (!assessmentText.trim()) {
+    throw new Error('Assessment text is empty or invalid.');
+  }
+
+  const threadsPrompt = `You are Athena, the goddess of wisdom and strategy, acting as a personal mentor for self-improvement.
+The user will provide their Purpose, Vision, Values, Personality type, and answers to 12 self-assessment questions.
+Your task is to generate exactly 5 "Threads to Weave" — small, actionable steps that reflect the user's unique context.
+
+Instructions:
+A Thread to Weave = a specific, actionable practice, reflection, or challenge the user can try in the near future.
+
+Keep the scope broad: threads can address anything from habits (like improving sleep) to fears (like public speaking) to relationships, purpose, mindset, health, or creativity.
+
+Threads may connect to one of the growth categories (Habits, Mindset, Relationships, Health, Creativity, Purpose, Learning), but they don't have to be confined to a single category. Some may overlap multiple areas.
+
+Ground each thread in the user's life context (college student, personal struggles, passions, relationships, etc.). Avoid generic advice.
+
+Make threads practical and achievable in daily life, but also inspiring — they should feel like steps toward weaving a stronger, wiser self.
+
+You must return exactly 5 threads, no more, no less.
+
+Format your answer as a JSON array of exactly 5 strings, where each string contains both the title and description separated by " — ":
+
+Example Format:
+[
+  "Daily Study Ritual — Block out one hour at the same time each day to create a rhythm and reduce procrastination.",
+  "Reframe Setbacks — After a tough exam, write down one thing you learned instead of focusing on mistakes.",
+  "Sister Connection — Invite your older sister to join you in baking this weekend as a first step toward rebuilding trust.",
+  "Courage Practice — Start one conversation with someone new in class this week to reduce social anxiety.",
+  "Sleep Reset — Set a consistent bedtime alarm to build a healthier sleep pattern."
+]
+
+User Context:
+"${assessmentText}"
+
+Return only the JSON array, no additional text.`;
+
+  const requestBody: GeminiRequestBody = {
+    contents: [
+      {
+        parts: [
+          {
+            text: threadsPrompt,
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      temperature: 0.3,     // Slightly higher for creative suggestions
+      maxOutputTokens: 10000,
+    },
+    safetySettings: [
+      { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+    ],
+  };
+
+  console.log("Generating threads to weave with Gemini:", assessmentText);
+
+  try {
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Gemini API returned an error:', response.status, errorData);
+      throw new Error(`Gemini API error (Status ${response.status}): ${JSON.stringify(errorData)}`);
+    }
+
+    const responseData: GeminiAPIResponse = await response.json();
+    console.log("Received threads response from Gemini:", JSON.stringify(responseData, null, 2));
+
+    const candidate = responseData.candidates?.[0];
+    if (candidate?.content?.parts?.[0]?.text) {
+      const rawResponse = candidate.content.parts[0].text.trim();
+      
+      // Extract JSON from response (remove any markdown code blocks)
+      let jsonString = rawResponse;
+      if (rawResponse.includes('```json')) {
+        const jsonMatch = rawResponse.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          jsonString = jsonMatch[1];
+        }
+      } else if (rawResponse.includes('```')) {
+        const jsonMatch = rawResponse.match(/```\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          jsonString = jsonMatch[1];
+        }
+      }
+
+      try {
+        const threads: string[] = JSON.parse(jsonString);
+        
+        // Validate that we got an array of strings
+        if (!Array.isArray(threads)) {
+          throw new Error('Response is not an array');
+        }
+        
+        if (threads.length !== 5) {
+          throw new Error(`Expected exactly 5 threads, got ${threads.length}`);
+        }
+
+        // Validate that all items are strings
+        for (const thread of threads) {
+          if (typeof thread !== 'string' || !thread.includes(' — ')) {
+            throw new Error(`Invalid thread format: ${thread}`);
+          }
+        }
+
+        return threads;
+      } catch (parseError) {
+        console.error('Failed to parse threads response:', parseError);
+        console.error('Raw response was:', rawResponse);
+        throw new Error(`Failed to parse Gemini response: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}`);
+      }
+    } else {
+      throw new Error('No valid response content received from Gemini API');
+    }
+  } catch (error) {
+    console.error('Error calling Gemini API for threads:', error);
+    throw error;
+  }
 }
 
 // ATHENA SPEAKS! SHE SPEAKS! YOOOOOOOOOOOOOOOOOOOOOOOOOO

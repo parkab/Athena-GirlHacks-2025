@@ -1,7 +1,9 @@
 import PomodoroTimer from '@/components/PomodoroTimer';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function PomodoroPage() {
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-temple py-12">
       <div className="relative">
         {/* Greek columns decoration */}
@@ -17,5 +19,6 @@ export default function PomodoroPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   );
 }

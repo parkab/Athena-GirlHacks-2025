@@ -7,6 +7,7 @@ export interface IUserProfile extends mongoose.Document {
   selfAssessment: {
     questions: string[];
   };
+  userId: mongoose.Types.ObjectId | string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +28,12 @@ const UserProfileSchema = new mongoose.Schema({
     required: true,
     maxlength: [100, 'Each value cannot exceed 100 characters']
   }],
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true
+  },
   selfAssessment: {
     questions: [{
       type: String,
