@@ -42,7 +42,7 @@ const config: Config = {
       },
       backgroundImage: {
         'greek-pattern': "url('/greek-pattern.svg')",
-        'temple': "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+        'temple': "#6e8d6a",
       },
     },
   },

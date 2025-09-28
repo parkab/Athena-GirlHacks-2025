@@ -15,6 +15,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Basic validation: ensure questions array is present
+    if (!selfAssessment || !Array.isArray(selfAssessment.questions)) {
+      return NextResponse.json({ error: 'Invalid selfAssessment.questions' }, { status: 400 });
+    }
+
     // For now, we'll create a new profile each time
     // In a real app, you'd want user authentication and update existing profiles
     const profile = new UserProfile({
