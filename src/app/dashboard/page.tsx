@@ -41,7 +41,9 @@ export default function DashboardPage() {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch('/api/profile', { credentials: 'include' });
+      // include credentials so the token cookie is sent
+      const response = await fetch('/api/profile', { headers: { authorization: 'Bearer ' + localStorage.getItem('token') } });
+
       if (response.status === 401) {
         router.push('/login');
         return;
@@ -253,7 +255,7 @@ export default function DashboardPage() {
       </AuthGuard>
     );
   }
-
+  
   return (
     <AuthGuard>
       <div className="min-h-screen bg-temple py-12">

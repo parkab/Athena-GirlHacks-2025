@@ -22,24 +22,15 @@ export default function RootLayout({
                   ΑΘΗΝΑ
                 </h1>
               </div>
-              <div className="flex space-x-6 items-center">
-                <a href="/dashboard" className="text-primary-600 hover:text-primary-800 font-medium">
+              <div className="flex space-x-6 items-center gap-6">
+                <a href="/dashboard" className="text-sm font-serif font-bold text-green-700 hover:underline px-3 py-2 rounded-md bg-gray-50 hover:bg-gray-100 transition">
                   Dashboard
                 </a>
-                <a href="/profile" className="text-primary-600 hover:text-primary-800 font-medium">
-                  Profile
-                </a>
-                <a href="/chat" className="text-primary-600 hover:text-primary-800 font-medium">
+                <a href="/chat" className="text-sm font-serif font-bold text-green-700 hover:underline px-3 py-2 rounded-md bg-gray-50 hover:bg-gray-100 transition">
                   Ask Athena
                 </a>
-                <a href="/pomodoro" className="text-primary-600 hover:text-primary-800 font-medium">
+                <a href="/pomodoro" className="text-sm font-serif font-bold text-green-700 hover:underline px-3 py-2 rounded-md bg-gray-50 hover:bg-gray-100 transition">
                   Pomodoro
-                </a>
-                <a href="/test-analysis" className="text-primary-600 hover:text-primary-800 font-medium">
-                  Analysis
-                </a>
-                <a href="/radar-demo" className="text-primary-600 hover:text-primary-800 font-medium">
-                  Charts
                 </a>
               </div>
             </div>
