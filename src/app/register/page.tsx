@@ -45,7 +45,7 @@ export default function RegisterPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Username</label>
             <input
-              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg text-black"
+              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg text-gray-700" //text-black turns it gray?????
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -57,7 +57,7 @@ export default function RegisterPage() {
             <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
               type="password"
-              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg text-black"
+              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg text-gray-700" //text-black turns it gray?????
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
