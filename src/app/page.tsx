@@ -13,7 +13,7 @@ export default function Home() {
 //         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
 //           <div className="text-center">
 //             <h1 className="text-6xl font-serif font-bold text-primary-800 mb-6">
-//               ΑΘΗΝΑ
+//               Athena
 //             </h1>
 //             <p className="text-xl text-primary-600 mb-8 max-w-2xl mx-auto">
 //               Embrace the wisdom of ancient Greece on your journey to personal excellence. 
