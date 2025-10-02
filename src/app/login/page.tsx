@@ -83,7 +83,7 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
               type="password"
-              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg text-gray-700"
+              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg text-gray-700" //text-black turns it gray?????
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -96,7 +96,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary-600 hover:bg-primary-700 text-white px-4 py-3 rounded-lg font-semibold"
+            className="w-full bg-primary-600 hover:bg-primary-700 text-white px-4 py-3 rounded-lg font-semibold" //text-black turns it gray?????
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
