@@ -69,9 +69,9 @@ export default function LoginPage() {
         <h1 className="text-2xl font-serif font-bold text-primary-800 mb-4">Sign in</h1>
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-black">Username</label>
+            <label className="block text-sm font-medium text-gray-700">Username</label>
             <input
-              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg text-black"
+              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg text-gray-700"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -80,10 +80,10 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-black">Password</label>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
               type="password"
-              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg text-black"
+              className="mt-1 w-full p-3 border-2 border-primary-200 rounded-lg text-gray-700"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
