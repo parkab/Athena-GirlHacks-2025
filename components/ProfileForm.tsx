@@ -78,7 +78,7 @@ export default function ProfileForm() {
     };
 
     fetchProfile();
-  }, []);
+  }, [PROMPTS.length]);
 
   const addValue = () => {
     setFormData(prev => ({

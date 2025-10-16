@@ -16,7 +16,16 @@ function getTokenFromReq(req: NextRequest) {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-function generateProfileHash(profileData: any): string {
+interface ProfileData {
+  purpose?: string;
+  vision?: string;
+  values?: string[];
+  selfAssessment?: {
+    questions?: string[];
+  };
+}
+
+function generateProfileHash(profileData: ProfileData): string {
   const normalizedData = {
     purpose: profileData.purpose?.trim() || '',
     vision: profileData.vision?.trim() || '',
