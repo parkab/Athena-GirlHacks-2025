@@ -10,6 +10,21 @@ export interface IUserProfile extends mongoose.Document {
   userId: mongoose.Types.ObjectId | string;
   createdAt: Date;
   updatedAt: Date;
+  // analysis caching
+  analysisCache?: {
+    dataHash: string; // hash of profile data
+    radarScores: {
+      Habits: number;
+      Mindset: number;
+      Relationships: number;
+      Health: number;
+      Creativity: number;
+      Purpose: number;
+      Learning: number;
+    };
+    threadsToWeave: string[];
+    lastAnalyzed: Date;
+  };
 }
 
 const UserProfileSchema = new mongoose.Schema({
@@ -37,9 +52,31 @@ const UserProfileSchema = new mongoose.Schema({
   selfAssessment: {
     questions: [{
       type: String,
-      required: true,
+      required: false,
       maxlength: [1000, 'Each response cannot exceed 1000 characters']
     }]
+  },
+  analysisCache: {
+    type: {
+      dataHash: {
+        type: String,
+        required: false
+      },
+      radarScores: {
+        type: mongoose.Schema.Types.Mixed,
+        required: false
+      },
+      threadsToWeave: {
+        type: [String],
+        required: false
+      },
+      lastAnalyzed: {
+        type: Date,
+        required: false
+      }
+    },
+    required: false,
+    default: undefined
   }
 }, {
   timestamps: true
