@@ -21,15 +21,18 @@ export async function GET(req: NextRequest) {
     const payload = verifyToken(token);
     if (!payload) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
-    //JWT token contains the user info and is already verified
-    return NextResponse.json({ 
+    const response = NextResponse.json({ 
       user: { 
         id: payload.id, 
         username: payload.username,
-        // Add current timestamp as a simple "last verified" indicator
         lastVerified: new Date().toISOString()
       } 
     });
+
+    response.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60');
+    response.headers.set('Vary', 'Authorization, Cookie');
+    
+    return response;
   } catch (err) {
     console.error('Me error:', err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

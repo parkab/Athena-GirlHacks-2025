@@ -1,3 +1,4 @@
+import AuthPreloader from "@/components/AuthPreloader";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -14,6 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-temple">
+        <AuthPreloader />
         <nav className="bg-white shadow-lg border-b-4 border-gold-400">
           <div className="max-w-8xl mx-auto px-6 sm:px-8 lg:px-12">
             <div className="flex justify-between h-20">
