@@ -3,7 +3,6 @@ import dbConnect from '@/lib/db';
 import UserProfile from '@/lib/models';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 function getTokenFromReq(req: NextRequest) {
@@ -31,19 +30,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Basic validation: ensure questions array is present
+    // ensure questions array is present
     if (!selfAssessment || !Array.isArray(selfAssessment.questions)) {
       return NextResponse.json({ error: 'Invalid selfAssessment.questions' }, { status: 400 });
     }
 
-    // Upsert profile for the authenticated user (one profile per user)
+    // update profile for authenticated user
     const userId = payload.id;
     const update = {
       purpose,
       vision,
       values,
       selfAssessment,
-      userId
+      userId,
+      // clear analysis cache after profile update
+      $unset: { analysisCache: 1 }
     };
 
     const profile = await UserProfile.findOneAndUpdate(

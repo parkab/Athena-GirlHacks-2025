@@ -1,14 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ProfileFormData {
   purpose: string;
   vision: string;
   values: string[];
   selfAssessment: {
-    questions: string[]; // fixed 12 questions
+    questions: string[];
   };
 }
 
@@ -38,6 +38,47 @@ export default function ProfileForm() {
     }
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasExistingProfile, setHasExistingProfile] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('/api/profile', {
+          headers: { 
+            authorization: 'Bearer ' + localStorage.getItem('token') 
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.profile) {
+            setHasExistingProfile(true);
+            // prefill form w/ existing data
+            const existingQuestions = data.profile.selfAssessment?.questions || [];
+            const questions = Array(PROMPTS.length).fill('').map((_, index) => 
+              existingQuestions[index] || ''
+            );
+            
+            setFormData({
+              purpose: data.profile.purpose || '',
+              vision: data.profile.vision || '',
+              values: data.profile.values && data.profile.values.length > 0 ? data.profile.values : [''],
+              selfAssessment: {
+                questions
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [PROMPTS.length]);
 
   const addValue = () => {
     setFormData(prev => ({
@@ -79,9 +120,11 @@ export default function ProfileForm() {
         ...formData,
         values: formData.values.filter(v => v.trim()),
         selfAssessment: {
-          questions: formData.selfAssessment.questions.map(q => q.trim()).filter(Boolean)
+          questions: formData.selfAssessment.questions.map(q => q.trim())
         }
       };
+
+      console.log('DEBUG: Sending profile data:', JSON.stringify(filteredData, null, 2));
 
       const response = await fetch('/api/profile', {
         method: 'POST',
@@ -103,12 +146,25 @@ export default function ProfileForm() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-white rounded-lg shadow-xl p-8 border-4 border-gold-200">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+            <p className="text-primary-600">Loading your profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-xl p-8 border-4 border-gold-200">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-serif font-bold text-primary-800 mb-4">
-            Build Your Foundation
+            {hasExistingProfile ? 'Update Your Foundation' : 'Build Your Foundation'}
           </h1>
           <p className="text-lg text-primary-600">
             Like the pillars of a great temple, your personal foundation supports all growth
@@ -166,6 +222,7 @@ export default function ProfileForm() {
                   onChange={(e) => updateValue(index, e.target.value)}
                   className="text-gray-900 flex-1 p-3 border-2 border-primary-200 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                   placeholder="Enter a core value..."
+                  required
                 />
                 {formData.values.length > 1 && (
                   <button
@@ -192,6 +249,9 @@ export default function ProfileForm() {
             <h2 className="text-2xl font-serif font-semibold text-primary-800 mb-6 flex items-center">
               📊 Self Assessment
             </h2>
+            <p className="text-primary-600 mb-4">
+              All questions are not required, fill out as much as you can!
+            </p>
 
             <div className="grid gap-6">
               {PROMPTS.map((prompt, index) => (
@@ -217,7 +277,10 @@ export default function ProfileForm() {
               disabled={isSubmitting}
               className="bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
             >
-              {isSubmitting ? 'Saving Your Foundation...' : 'Build My Foundation'}
+              {isSubmitting 
+                ? (hasExistingProfile ? 'Updating Your Foundation...' : 'Saving Your Foundation...') 
+                : (hasExistingProfile ? 'Update My Foundation' : 'Build My Foundation')
+              }
             </button>
           </div>
         </form>
