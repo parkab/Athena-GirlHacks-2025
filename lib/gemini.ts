@@ -1,33 +1,19 @@
-// --- Configuration ---
-// Next.js automatically loads environment variables defined in .env* files
-
-
-// For API routes, you don't need to prefix with NEXT_PUBLIC_ for server-side use.
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL_ID = 'gemini-2.5-flash'; // Change model as needed
-
-// --- Alternative URLS ---
-// Gemini 2.5 Pro: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent'
-// Gemini 2.5 Flash: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
-// Gemini 2.5 Flash-Lite: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+const GEMINI_MODEL_ID = 'gemini-2.5-flash';
 
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_ID}:generateContent`;
 
-import { PERSONALITIES } from "./personalities";  
-// --- Type Definitions for Gemini API Request ---
+import { PERSONALITIES } from "./personalities";
 
-// Defines a part in the request
 interface PartRequest {
   text: string;
 }
 
-// Defines a Content object for requests
 interface ContentRequest {
   parts: PartRequest[];
   role?: string;
 }
 
-// Defines the overall request body structure for the Gemini API
 interface GeminiRequestBody {
   contents: ContentRequest[];
   generationConfig?: {
@@ -43,35 +29,28 @@ interface GeminiRequestBody {
   }>;
 }
 
-// --- Type Definitions for Gemini API Response ---
-
-// Defines a part in the model's response (often just text)
 interface PartResponse {
   text: string;
 }
 
-// Defines a Content object in the model's response
-interface ContentResponse { // Renamed to avoid confusion with request Content
+interface ContentResponse {
   parts: PartResponse[];
-  role: string; // e.g., "model"
+  role: string;
 }
 
-// Defines a Content object in the model's response
 interface Candidate {
-  content: ContentResponse; // Use the renamed interface
-  finishReason?: string; // e.g., "STOP"
+  content: ContentResponse;
+  finishReason?: string;
   index: number;
   safetyRatings?: Array<{
     category: string;
     probability: string;
-    blocked: boolean; // Indicates if this category caused blocking
+    blocked: boolean;
   }>;
 }
 
-// Defines the overall response structure from the Gemini API
 interface GeminiAPIResponse {
   candidates: Candidate[];
-  // If the request was blocked entirely, a promptFeedback field might be present
   promptFeedback?: {
     safetyRatings: Array<{
       category: string;
@@ -79,17 +58,14 @@ interface GeminiAPIResponse {
       blocked: boolean;
     }>;
   };
-  usageMetadata?: { // Added usageMetadata type
+  usageMetadata?: {
     promptTokenCount: number;
     totalTokenCount: number;
-    // other fields like promptTokensDetails, thoughtsTokenCount
   };
-  modelVersion?: string; // The specific model version that responded
+  modelVersion?: string;
   responseId?: string;
 }
 
-
-// --- User Profile Context Interface ---
 interface UserProfileContext {
   purpose: string;
   vision: string;
@@ -113,11 +89,10 @@ export async function getPersonalizedAdvice(
     throw new Error('GEMINI_API_KEY is not set in environment variables.');
   }
 
-  // 1. Construct the comprehensive prompt string
   let fullPrompt = `The user is asking: "${userMessage}"`;
 
   if (!personalityId)
-    personalityId = "hermes"; // default personality
+    personalityId = "hermes";
     const personality = PERSONALITIES[personalityId] ?? PERSONALITIES["athena"];
 
   if (userProfile) {
@@ -134,12 +109,7 @@ ${personality.systemPrompt}
 Use clear, concise language. Avoid overly theatrical or poetic phrasing.  
 Limit roleplay. You are a mentor/coach inspired by the god, who in addition speaks largely in modern language and tone.
 Try to keep your response within 3 paragraphs or below 200 words unless explicitly asked for more detail.
-`; //Here is the GOD
-
-// Based on this context and striving for a supportive, empathetic, and actionable tone, 
-// please provide personalized advice or a thoughtful response to their query. 
-// Your response should directly address their message while integrating insights from their profile. 
-// Keep the response concise and to the point.`;
+`;
 
   } else {
     fullPrompt += `
@@ -159,8 +129,8 @@ Please provide advice or a response to their query. Keep the response concise an
       },
     ],
     generationConfig: {
-      temperature: 0.8,     // A bit more creative
-      maxOutputTokens: 10000, // Limit response length for conciseness
+      temperature: 0.8,
+      maxOutputTokens: 10000,
     },
     safetySettings: [
       { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
@@ -173,7 +143,6 @@ Please provide advice or a response to their query. Keep the response concise an
   console.log("Sending request to Gemini with payload:", JSON.stringify(requestBody, null, 2));
 
   try {
-    // 3. Make the API call using native fetch
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
@@ -182,9 +151,8 @@ Please provide advice or a response to their query. Keep the response concise an
       body: JSON.stringify(requestBody),
     });
 
-    // Check if the response was successful (status code 2xx)
     if (!response.ok) {
-      const errorData = await response.json(); // Attempt to read error details
+      const errorData = await response.json();
       console.error('Gemini API returned an error:', response.status, errorData);
       throw new Error(`Gemini API error (Status ${response.status}): ${JSON.stringify(errorData)}`);
     }
@@ -199,18 +167,13 @@ Please provide advice or a response to their query. Keep the response concise an
       if (candidate.content?.parts?.[0]?.text) {
         return candidate.content.parts[0].text;
       } else if (candidate.finishReason === 'SAFETY') {
-        // If content was blocked due to safety
         const safetyFeedback = candidate.safetyRatings?.map(r => `${r.category}: ${r.probability}`).join(', ');
         throw new Error(`Response blocked due to safety policy: ${safetyFeedback || 'Unknown reason'}`);
       } else if (candidate.finishReason === 'MAX_TOKENS') {
-         // This means it generated up to the limit but the final 'text' might still be here
-         // If it hit max_tokens, the text should still be present, just truncated
          throw new Error('Gemini response was truncated due to MAX_TOKENS. Consider increasing maxOutputTokens.');
       }
-      // Fallback for other unexpected candidate scenarios
       throw new Error('Gemini API response candidate did not contain expected text or had an unexpected finish reason.');
     } else if (responseData.promptFeedback?.safetyRatings?.some(r => r.blocked)) {
-      // If the entire prompt was blocked before any candidates were generated
       const safetyFeedback = responseData.promptFeedback.safetyRatings.map(r => `${r.category}: ${r.probability}`).join(', ');
       throw new Error(`Your prompt was blocked by the safety system: ${safetyFeedback}`);
     } else {
@@ -223,7 +186,6 @@ Please provide advice or a response to their query. Keep the response concise an
   }
 }
 
-// --- Assessment Analysis Types ---
 interface AssessmentCategories {
   Habits: number;
   Mindset: number;
@@ -245,54 +207,37 @@ interface ProfileData {
   };
 }
 
-/**
- * Extracts all relevant text from a user's profile assessment
- * @param profileData The complete profile data from the form
- * @returns A concatenated string of all text-based assessment content
- */
 export function extractAssessmentText(profileData: ProfileData): string {
   const textParts: string[] = [];
 
-  // Add purpose statement
   if (profileData.purpose.trim()) {
     textParts.push(`Purpose: ${profileData.purpose}`);
   }
 
-  // Add vision statement
   if (profileData.vision.trim()) {
     textParts.push(`Vision: ${profileData.vision}`);
   }
 
-  // Add values (filter out empty values)
   const validValues = profileData.values.filter(value => value.trim());
   if (validValues.length > 0) {
     textParts.push(`Values: ${validValues.join(', ')}`);
   }
 
-  // Add goals (filter out empty goals)
   const validGoals = profileData.selfAssessment.goals.filter(goal => goal.trim());
   if (validGoals.length > 0) {
     textParts.push(`Goals: ${validGoals.join(', ')}`);
   }
 
-  // Add challenges (filter out empty challenges)
   const validChallenges = profileData.selfAssessment.challenges.filter(challenge => challenge.trim());
   if (validChallenges.length > 0) {
     textParts.push(`Challenges: ${validChallenges.join(', ')}`);
   }
 
-  // Add current level context
   textParts.push(`Current self-assessment level: ${profileData.selfAssessment.currentLevel}/10`);
 
   return textParts.join(' | ');
 }
 
-/**
- * Analyzes user assessment text and categorizes it using Gemini AI
- * @param assessmentText The extracted assessment text to analyze
- * @returns A promise that resolves to category scores (0.0-1.0 for each category)
- * @throws An error if the API key is missing or the API call fails
- */
 export async function analyzeAssessmentCategories(assessmentText: string): Promise<AssessmentCategories> {
   if (!GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY is not set in environment variables.');
@@ -346,7 +291,7 @@ Return JSON only in this format:
       },
     ],
     generationConfig: {
-      temperature: 0.1,     // Low temperature for consistent JSON output
+      temperature: 0.1,     //low temperature for consistent JSON output
       maxOutputTokens: 10000,
     },
     safetySettings: [
@@ -381,7 +326,7 @@ Return JSON only in this format:
     if (candidate?.content?.parts?.[0]?.text) {
       const rawResponse = candidate.content.parts[0].text.trim();
       
-      // Extract JSON from response (remove any markdown code blocks)
+      // extract JSON from response (remove any markdown code blocks)
       let jsonString = rawResponse;
       if (rawResponse.includes('```json')) {
         const jsonMatch = rawResponse.match(/```json\s*([\s\S]*?)\s*```/);
@@ -396,17 +341,48 @@ Return JSON only in this format:
       }
 
       try {
-        const categories: AssessmentCategories = JSON.parse(jsonString);
+        const rawCategories = JSON.parse(jsonString);
         
-        // Validate that all required categories are present and are numbers between 0 and 1
-        const requiredCategories = ['Habits', 'Mindset', 'Relationships', 'Health', 'Creativity', 'Purpose', 'Learning'];
-        for (const category of requiredCategories) {
-          if (!(category in categories)) {
-            throw new Error(`Missing category: ${category}`);
+        const categoryMapping: Record<string, keyof AssessmentCategories> = {
+          'Habits': 'Habits',
+          'Habits & Discipline': 'Habits',
+          'Mindset': 'Mindset', 
+          'Mindset & Resilience': 'Mindset',
+          'Relationships': 'Relationships',
+          'Relationships & Connection': 'Relationships',
+          'Health': 'Health',
+          'Health & Vitality': 'Health',
+          'Creativity': 'Creativity',
+          'Creativity & Expression': 'Creativity',
+          'Purpose': 'Purpose',
+          'Purpose & Vision': 'Purpose',
+          'Learning': 'Learning',
+          'Learning & Growth': 'Learning'
+        };
+
+        // Convert to expected format
+        const categories: AssessmentCategories = {
+          Habits: 0,
+          Mindset: 0,
+          Relationships: 0,
+          Health: 0,
+          Creativity: 0,
+          Purpose: 0,
+          Learning: 0
+        };
+
+        for (const [fullName, score] of Object.entries(rawCategories)) {
+          const shortName = categoryMapping[fullName];
+          if (shortName && typeof score === 'number') {
+            categories[shortName] = Math.max(0, Math.min(1, score));
           }
-          const score = categories[category as keyof AssessmentCategories];
+        }
+        
+        const requiredCategories: (keyof AssessmentCategories)[] = ['Habits', 'Mindset', 'Relationships', 'Health', 'Creativity', 'Purpose', 'Learning'];
+        for (const category of requiredCategories) {
+          const score = categories[category];
           if (typeof score !== 'number' || score < 0 || score > 1) {
-            throw new Error(`Invalid score for ${category}: ${score}. Must be a number between 0.0 and 1.0`);
+            throw new Error(`Invalid or missing score for ${category}: ${score}. Must be a number between 0.0 and 1.0`);
           }
         }
 
@@ -499,7 +475,7 @@ Return only the JSON array, no additional text.`;
       },
     ],
     generationConfig: {
-      temperature: 0.3,     // Slightly higher for creative suggestions
+      temperature: 0.3,     //higher for creative suggestions
       maxOutputTokens: 10000,
     },
     safetySettings: [
@@ -534,7 +510,7 @@ Return only the JSON array, no additional text.`;
     if (candidate?.content?.parts?.[0]?.text) {
       const rawResponse = candidate.content.parts[0].text.trim();
       
-      // Extract JSON from response (remove any markdown code blocks)
+      //extract JSON from response (remove any markdown code blocks)
       let jsonString = rawResponse;
       if (rawResponse.includes('```json')) {
         const jsonMatch = rawResponse.match(/```json\s*([\s\S]*?)\s*```/);
@@ -551,7 +527,6 @@ Return only the JSON array, no additional text.`;
       try {
         const threads: string[] = JSON.parse(jsonString);
         
-        // Validate that we got an array of strings
         if (!Array.isArray(threads)) {
           throw new Error('Response is not an array');
         }
@@ -560,7 +535,6 @@ Return only the JSON array, no additional text.`;
           throw new Error(`Expected exactly 5 threads, got ${threads.length}`);
         }
 
-        // Validate that all items are strings
         for (const thread of threads) {
           if (typeof thread !== 'string' || !thread.includes(' — ')) {
             throw new Error(`Invalid thread format: ${thread}`);
