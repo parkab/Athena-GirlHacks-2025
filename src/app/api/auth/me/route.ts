@@ -1,9 +1,7 @@
 import { verifyToken } from '@/lib/auth';
-import dbConnect from '@/lib/db';
-import User from '@/lib/user';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Force dynamic rendering
+// force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 function getTokenFromReq(req: NextRequest) {
@@ -23,11 +21,15 @@ export async function GET(req: NextRequest) {
     const payload = verifyToken(token);
     if (!payload) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
-    await dbConnect();
-    const user = await User.findById(payload.id).select('username createdAt');
-    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-
-    return NextResponse.json({ user: { id: user._id, username: user.username, createdAt: user.createdAt } });
+    //JWT token contains the user info and is already verified
+    return NextResponse.json({ 
+      user: { 
+        id: payload.id, 
+        username: payload.username,
+        // Add current timestamp as a simple "last verified" indicator
+        lastVerified: new Date().toISOString()
+      } 
+    });
   } catch (err) {
     console.error('Me error:', err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

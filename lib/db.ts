@@ -41,9 +41,12 @@ async function dbConnect(): Promise<mongoose.Connection | null> {
     const opts = {
       bufferCommands: false,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
+      minPoolSize: 2,
+      maxIdleTimeMS: 30000,
+      serverSelectionTimeoutMS: 3000,
       socketTimeoutMS: 45000,
-      connectTimeoutMS: 10000,
+      connectTimeoutMS: 5000,
+      heartbeatFrequencyMS: 10000,
     };
 
     console.log('Creating new MongoDB connection promise...');
